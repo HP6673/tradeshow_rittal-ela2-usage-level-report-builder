@@ -223,7 +223,7 @@ export function Calculator() {
               />
               <div className="min-w-0">
                 <h1 className="text-2xl font-semibold tracking-normal text-[#111827] sm:text-3xl lg:text-4xl">
-                  ELA2 Quick ROI Calculator
+                  ELA2 Usage Level Report Builder
                 </h1>
                 {input.companyName ? (
                   <p className="mt-1 truncate text-sm text-[#64748b]">

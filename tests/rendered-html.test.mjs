@@ -29,8 +29,8 @@ test("server-renders the ELA2 quick ROI calculator with workbook defaults applie
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>ELA2 Quick ROI Calculator<\/title>/i);
-  assert.match(html, /ELA2 Quick ROI Calculator/i);
+  assert.match(html, /<title>ELA2 Usage Level Report Builder<\/title>/i);
+  assert.match(html, /ELA2 Usage Level Report Builder/i);
   assert.match(html, /Quick inputs/i);
   assert.match(html, /Results\s*(&|&amp;)\s*savings/i);
   assert.match(html, /Recommended offering/i);
@@ -168,7 +168,7 @@ test("keeps deployment metadata and source aligned", async () => {
 
   assert.match(page, /export const metadata:\s*Metadata/);
   assert.match(page, /<Calculator \/>/);
-  assert.match(layout, /title:\s*"ELA2 Quick ROI Calculator"/);
+  assert.match(layout, /title:\s*"ELA2 Usage Level Report Builder"/);
   assert.match(calculator, /src="\/rittal-logo\.png"/);
   assert.match(packageJson, /"packageManager": "pnpm@11\.9\.0"/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
