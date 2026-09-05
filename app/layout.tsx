@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Trade Show ROI Calculator",
-  description: "A quick-entry ROI calculator for trade show booths.",
+  title: "ELA2 Quick ROI Calculator",
+  description: "A quick-entry ROI calculator.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",

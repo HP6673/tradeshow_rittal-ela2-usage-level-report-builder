@@ -20,7 +20,7 @@ import { RecommendationsSection } from "./components/Recommendations.tsx";
 import { ExportReportModal } from "./components/PrintReport.tsx";
 import { SectionCard } from "./components/ui.tsx";
 
-const STORAGE_KEY = "rittal-ela2-tradeshow-report-builder:v1";
+const STORAGE_KEY = "rittal-ela2-quick-report-builder:v1";
 
 const steps = [
   { id: "step-1", label: "Inputs" },
@@ -223,7 +223,7 @@ export function Calculator() {
               />
               <div className="min-w-0">
                 <h1 className="text-2xl font-semibold tracking-normal text-[#111827] sm:text-3xl lg:text-4xl">
-                  Trade Show ROI Calculator
+                  ELA2 Quick ROI Calculator
                 </h1>
                 {input.companyName ? (
                   <p className="mt-1 truncate text-sm text-[#64748b]">

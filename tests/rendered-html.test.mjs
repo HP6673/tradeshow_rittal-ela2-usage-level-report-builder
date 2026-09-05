@@ -23,15 +23,15 @@ async function render() {
   );
 }
 
-test("server-renders the trade show ROI calculator with workbook defaults applied", async () => {
+test("server-renders the ELA2 quick ROI calculator with workbook defaults applied", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>Trade Show ROI Calculator<\/title>/i);
-  assert.match(html, /Trade Show ROI Calculator/i);
-  assert.match(html, /Trade show quick inputs/i);
+  assert.match(html, /<title>ELA2 Quick ROI Calculator<\/title>/i);
+  assert.match(html, /ELA2 Quick ROI Calculator/i);
+  assert.match(html, /Quick inputs/i);
   assert.match(html, /Results\s*(&|&amp;)\s*savings/i);
   assert.match(html, /Recommended offering/i);
   assert.match(html, />Export report</i);
@@ -39,7 +39,7 @@ test("server-renders the trade show ROI calculator with workbook defaults applie
   assert.match(html, /Improvements to production/i);
   assert.match(html, /rittal-logo\.png/);
 
-  // The 5 trade show quick-entry fields must be present.
+  // The 5 quick-entry fields must be present.
   assert.match(html, /Company name/i);
   assert.match(html, /What software do you use\?/i);
   assert.match(html, />AutoCAD Electrical</);
@@ -51,7 +51,7 @@ test("server-renders the trade show ROI calculator with workbook defaults applie
   assert.match(html, /Quantity of panels per year/i);
 
   // The old multi-step wizard's detailed questionnaires must be gone — the
-  // trade show version uses workbook defaults for these instead of asking.
+  // quick-entry version uses workbook defaults for these instead of asking.
   assert.doesNotMatch(html, /Engineering questionnaire/i);
   assert.doesNotMatch(html, /Panel production questionnaire/i);
   assert.doesNotMatch(html, /Segment \/ industry/i);
@@ -59,7 +59,7 @@ test("server-renders the trade show ROI calculator with workbook defaults applie
   assert.doesNotMatch(html, /General rating on ECAD usage/i);
 
   // Workbook defaults must be applied on load, not a static, misleading
-  // $0.00 total — the trade show version still needs an instant estimate.
+  // $0.00 total — this quick-entry version still needs an instant estimate.
   assert.match(html, /\$137,813\.21/);
   assert.doesNotMatch(html, /\$0\.00/);
 
@@ -168,7 +168,7 @@ test("keeps deployment metadata and source aligned", async () => {
 
   assert.match(page, /export const metadata:\s*Metadata/);
   assert.match(page, /<Calculator \/>/);
-  assert.match(layout, /title:\s*"Trade Show ROI Calculator"/);
+  assert.match(layout, /title:\s*"ELA2 Quick ROI Calculator"/);
   assert.match(calculator, /src="\/rittal-logo\.png"/);
   assert.match(packageJson, /"packageManager": "pnpm@11\.9\.0"/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);

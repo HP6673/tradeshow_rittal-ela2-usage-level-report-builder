@@ -12,7 +12,7 @@ import {
   type ProductionAnswers,
 } from "../data/questionnaire.ts";
 
-// Trade show quick-entry: "What software do you use?" radio options.
+// Quick-entry: "What software do you use?" radio options.
 export const softwareOptions = [
   "AutoCAD Electrical",
   "SolidWorks Electrical",
@@ -35,7 +35,7 @@ export type Inputs = {
   pdmTool: string;
   erpTool: string;
 
-  // Trade show quick-entry software question. `softwareChoice` is one of
+  // Quick-entry software question. `softwareChoice` is one of
   // `softwareOptions`; `softwareOther` holds the free-text value when
   // "Other" is selected. `ecadTool` (above) always mirrors the effective
   // choice so the report/print output needs no extra wiring.

@@ -107,10 +107,10 @@ export function InputSection({
 }) {
   return (
     <SectionCard
-      description="A few quick questions for this booth visitor — enough for an instant savings estimate."
+      description="A few quick questions — enough for an instant savings estimate."
       id="step-1"
       step={1}
-      title="Trade show quick inputs"
+      title="Quick inputs"
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <Field

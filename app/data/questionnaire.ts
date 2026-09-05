@@ -99,7 +99,7 @@ export function computeProductionCurrentLevel(answers: ProductionAnswers) {
   );
 }
 
-// The trade show version doesn't collect interactive questionnaire answers —
+// This quick-entry version doesn't collect interactive questionnaire answers —
 // `defaultEngineeringAnswers`/`defaultProductionAnswers` above feed the
 // estimate as-is, so the original report builder's per-question
 // section/prompt/option definitions aren't needed here.
