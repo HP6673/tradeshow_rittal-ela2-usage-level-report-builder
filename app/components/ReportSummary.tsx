@@ -6,7 +6,7 @@ import {
   buildReportRows,
   moneyWithCents,
   number,
-  type ChartData,
+  type CategoryChartData,
   type Report,
 } from "../lib/calculations.ts";
 import { SectionCard } from "./ui.tsx";
@@ -58,8 +58,8 @@ export function ReportSummarySection({
 }: {
   report: Report;
   currency: string;
-  engineeringChart: ChartData;
-  productionChart: ChartData;
+  engineeringChart: CategoryChartData;
+  productionChart: CategoryChartData;
 }) {
   const rows = buildReportRows(report, currency);
   const engineeringMetrics = buildEngineeringMetricRows(report, currency);

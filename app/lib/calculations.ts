@@ -167,8 +167,101 @@ export type ChartData = {
   denseTotal: number[];
 };
 
-export function engineeringChartData(input: Inputs): ChartData {
-  const currentLevel = computeEngineeringCurrentLevel(input.engineeringAnswers);
+// Tradeshow request: the As-is efficiency level tracks which ECAD software
+// the customer selects — SolidWorks Electrical (and the other options) keep
+// the workbook-computed value (~2.15 for the shipped default answers), while
+// AutoCAD Electrical shows a lower, distinct value so the two competitive
+// products read as visibly different.
+export function engineeringAsIsLevel(input: Inputs) {
+  if (input.softwareChoice === "AutoCAD Electrical") {
+    return 1.76;
+  }
+
+  return computeEngineeringCurrentLevel(input.engineeringAnswers);
+}
+
+// Colors for the per-workflow-item chart segments (requirement: replace the
+// two-series Engineering/Standardization bars with a single stacked bar per
+// numbered workflow item, matching the customer's requested chart style).
+export const categoryPalette = [
+  "#E50043",
+  "#F59E0B",
+  "#10B981",
+  "#3B82F6",
+  "#8B5CF6",
+  "#EC4899",
+  "#14B8A6",
+  "#F97316",
+  "#6366F1",
+  "#84CC16",
+  "#0EA5E9",
+  "#334155",
+];
+
+export type ChartCategory = {
+  number: number;
+  label: string;
+  color: string;
+  asIs: number;
+  target: number;
+};
+
+export type CategoryChartData = {
+  currentLevel: number;
+  targetLevel: number;
+  categories: ChartCategory[];
+};
+
+const engineeringCategoryLabels = [
+  "Specification",
+  "Framework conditions",
+  "Engineering",
+  "Design (drawing)",
+  "Quality check",
+  "Bill of material",
+  "Reports",
+  "Cabinet design",
+];
+
+const productionCategoryLabels = [
+  "Fitting",
+  "Panel modification",
+  "Labeling Devices",
+  "Wire Fabrication",
+  "Mechanical installation",
+  "Devices installation",
+  "Terminal strip assembly",
+  "Wiring",
+  "Testing",
+  "Packaging",
+  "Article (3D mockup)",
+  "Cabinet design",
+];
+
+function buildCategoryChartData(
+  rows: number[][],
+  labels: string[],
+  numberStart: number,
+  currentLevel: number,
+  targetLevel: number,
+): CategoryChartData {
+  const categories = rows.map((row, index) => {
+    const dense = buildCalc2Lookup(row);
+
+    return {
+      number: numberStart + index,
+      label: labels[index],
+      color: categoryPalette[index % categoryPalette.length],
+      asIs: hlookupApprox(currentLevel, dense),
+      target: hlookupApprox(targetLevel, dense),
+    };
+  });
+
+  return { currentLevel, targetLevel, categories };
+}
+
+function engineeringRows(input: Inputs) {
+  const currentLevel = engineeringAsIsLevel(input);
   const targetLevel = input.engineeringTargetLevel;
 
   const k5 = 0.05;
@@ -200,6 +293,12 @@ export function engineeringChartData(input: Inputs): ChartData {
     [k11, avg(k11, k11 * 0.5), k11 * 0.5, avg(k11 * 0.5, k11 * 0.25), k11 * 0.25, avg(k11 * 0.25, 0), 0, 0, 0],
     [k12, k12, k12, avg(k12, k12 * 0.5), k12 * 0.5, avg(k12 * 0.5, k12 * 0.4), k12 * 0.4, avg(k12 * 0.4, k12 * 0.32), k12 * 0.32],
   ];
+
+  return { rows, currentLevel, targetLevel };
+}
+
+export function engineeringChartData(input: Inputs): ChartData {
+  const { rows, currentLevel, targetLevel } = engineeringRows(input);
 
   const sum1 = rows[0].map((_, index) =>
     rows.reduce((sum, row) => sum + row[index], 0),
@@ -234,11 +333,20 @@ export function engineeringChartData(input: Inputs): ChartData {
   };
 }
 
+// Tradeshow chart redesign: one stacked bar per As-is/Target row, segmented
+// by the 8 numbered engineering workflow items (replaces the old
+// Engineering/Standardization two-series bars).
+export function engineeringCategoryChartData(input: Inputs): CategoryChartData {
+  const { rows, currentLevel, targetLevel } = engineeringRows(input);
+
+  return buildCategoryChartData(rows, engineeringCategoryLabels, 1, currentLevel, targetLevel);
+}
+
 function engineeringEfficiencyValues(input: Inputs) {
   return engineeringChartData(input).denseTotal;
 }
 
-export function productionChartData(input: Inputs): ChartData {
+function productionRows(input: Inputs) {
   const currentLevel = computeProductionCurrentLevel(input.productionAnswers);
   const targetLevel = input.productionTargetLevel;
 
@@ -279,6 +387,14 @@ export function productionChartData(input: Inputs): ChartData {
     0.035 * rateRatio,
   ];
 
+  return { rows: [...staticRows, article3d, cabinetDesign], currentLevel, targetLevel };
+}
+
+export function productionChartData(input: Inputs): ChartData {
+  const { rows, currentLevel, targetLevel } = productionRows(input);
+  const staticRows = rows.slice(0, 10);
+  const [article3d, cabinetDesign] = rows.slice(10);
+
   const production = staticRows[0].map((_, index) =>
     staticRows.reduce((sum, row) => sum + row[index], 0),
   );
@@ -315,6 +431,15 @@ export function productionChartData(input: Inputs): ChartData {
   };
 }
 
+// Tradeshow chart redesign: one stacked bar per As-is/Target row, segmented
+// by the 12 numbered production workflow items (replaces the old
+// Production/Standardization two-series bars).
+export function productionCategoryChartData(input: Inputs): CategoryChartData {
+  const { rows, currentLevel, targetLevel } = productionRows(input);
+
+  return buildCategoryChartData(rows, productionCategoryLabels, 11, currentLevel, targetLevel);
+}
+
 function productionEfficiencyValues(input: Inputs) {
   return productionChartData(input).denseTotal;
 }
@@ -336,7 +461,7 @@ export function calculate(input: Inputs) {
 
   const engineeringValues = engineeringEfficiencyValues(input);
   const productionValues = productionEfficiencyValues(input);
-  const engineeringCurrentLevel = computeEngineeringCurrentLevel(input.engineeringAnswers);
+  const engineeringCurrentLevel = engineeringAsIsLevel(input);
   const engineeringTargetLevel = input.engineeringTargetLevel;
   const productionCurrentLevel = computeProductionCurrentLevel(input.productionAnswers);
   const productionTargetLevel = input.productionTargetLevel;
@@ -346,6 +471,12 @@ export function calculate(input: Inputs) {
   const productionTargetRatio = hlookupApprox(productionTargetLevel, productionValues);
   const engineeringDifference = engineeringAsIsRatio - engineeringTargetRatio;
   const productionDifference = productionAsIsRatio - productionTargetRatio;
+  const engineeringSavingPotential = engineeringCost * engineeringDifference;
+  const productionSavingPotential = productionCost * productionDifference;
+  const averageHourlyRate = avg(input.engineeringRate, input.productionRate);
+  const totalHoursPerYearSavings = averageHourlyRate
+    ? (engineeringSavingPotential + productionSavingPotential) / averageHourlyRate
+    : 0;
 
   return {
     totalPages,
@@ -360,7 +491,7 @@ export function calculate(input: Inputs) {
     engineeringAsIsRatio,
     engineeringTargetRatio,
     engineeringDifference,
-    engineeringSavingPotential: engineeringCost * engineeringDifference,
+    engineeringSavingPotential,
     totalPanels: input.panelsPerYear,
     productionHours,
     productionCost,
@@ -373,7 +504,9 @@ export function calculate(input: Inputs) {
     productionAsIsRatio,
     productionTargetRatio,
     productionDifference,
-    productionSavingPotential: productionCost * productionDifference,
+    productionSavingPotential,
+    averageHourlyRate,
+    totalHoursPerYearSavings,
   };
 }
 
@@ -388,6 +521,10 @@ export function moneyWithCents(value: number, currency: string) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
+}
+
+export function hours(value: number) {
+  return `${value.toLocaleString(undefined, { maximumFractionDigits: 0 })} h`;
 }
 
 export function number(value: number, digits = 2) {
@@ -428,48 +565,6 @@ export type ReportRow = {
 export function buildReportRows(report: Report, currency: string): ReportRow[] {
   return [
     {
-      label: "Total pages per year",
-      engineeringValue: report.totalPages.toLocaleString(),
-      productionLabel: "Total panels per year",
-      productionValue: report.totalPanels.toLocaleString(),
-    },
-    {
-      label: "Engineering hours per year",
-      engineeringValue: number(report.engineeringHours, 0),
-      productionLabel: "Production hours per year",
-      productionValue: number(report.productionHours, 0),
-    },
-    {
-      label: "Engineering costs per year",
-      engineeringValue: money(report.engineeringCost, currency),
-      productionLabel: "Production costs per year",
-      productionValue: money(report.productionCost, currency),
-    },
-    {
-      label: "Time per page",
-      engineeringValue: `${number(report.timePerPage, 3)} h`,
-      productionLabel: "Time per panel",
-      productionValue: `${number(report.timePerPanel, 3)} h`,
-    },
-    {
-      label: "Saving potential ratio 10%",
-      engineeringValue: money(report.engineeringSavings10, currency),
-      productionLabel: "Saving potential ratio 10%",
-      productionValue: money(report.productionSavings10, currency),
-    },
-    {
-      label: "Saving potential ratio 20%",
-      engineeringValue: money(report.engineeringSavings20, currency),
-      productionLabel: "Saving potential ratio 20%",
-      productionValue: money(report.productionSavings20, currency),
-    },
-    {
-      label: "Saving potential ratio 30%",
-      engineeringValue: money(report.engineeringSavings30, currency),
-      productionLabel: "Saving potential ratio 30%",
-      productionValue: money(report.productionSavings30, currency),
-    },
-    {
       label: "As-is efficiency level",
       engineeringValue: `${number(report.engineeringCurrentLevel, 2)} / ${number(report.engineeringAsIsRatio * 100, 1)}%`,
       productionLabel: "As-is efficiency level",
@@ -506,10 +601,6 @@ export type MetricRow = { label: string; value: string };
 // metrics card per side, so each side's own numbers read top to bottom.
 export function buildEngineeringMetricRows(report: Report, currency: string): MetricRow[] {
   return [
-    { label: "Total pages / year", value: report.totalPages.toLocaleString() },
-    { label: "Engineering hours / year", value: number(report.engineeringHours, 0) },
-    { label: "Engineering costs / year", value: money(report.engineeringCost, currency) },
-    { label: "Time / page", value: `${number(report.timePerPage, 3)} h` },
     {
       label: "Engineering as-is level",
       value: `${number(report.engineeringCurrentLevel, 2)} (${number(report.engineeringAsIsRatio * 100, 1)}%)`,
@@ -525,10 +616,6 @@ export function buildEngineeringMetricRows(report: Report, currency: string): Me
 
 export function buildProductionMetricRows(report: Report, currency: string): MetricRow[] {
   return [
-    { label: "Total panels / year", value: report.totalPanels.toLocaleString() },
-    { label: "Production hours / year", value: number(report.productionHours, 0) },
-    { label: "Production costs / year", value: money(report.productionCost, currency) },
-    { label: "Time / panel", value: `${number(report.timePerPanel, 3)} h` },
     {
       label: "Production as-is level",
       value: `${number(report.productionCurrentLevel, 2)} (${number(report.productionAsIsRatio * 100, 1)}%)`,

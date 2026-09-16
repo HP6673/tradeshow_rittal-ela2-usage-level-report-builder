@@ -89,11 +89,14 @@ test("default report matches every workbook acceptance value (requirement #8)", 
   assert.equal(report.engineeringHours, 3760);
   assert.equal(report.engineeringCost, 282000);
   assert.equal(Number(report.timePerPage.toFixed(3)), 0.752);
-  assert.equal(number2(report.engineeringCurrentLevel), "2.15");
-  assert.equal(number1(report.engineeringAsIsRatio * 100), "84.5");
+  // The default software choice is AutoCAD Electrical — the tradeshow build
+  // pins its As-is level to 1.76 (vs. ~2.15 for every other choice) so the
+  // two competitive products read as visibly different.
+  assert.equal(number2(report.engineeringCurrentLevel), "1.76");
+  assert.equal(number1(report.engineeringAsIsRatio * 100), "90.4");
   assert.equal(number2(report.engineeringTargetLevel), "3.68");
   assert.equal(number1(report.engineeringTargetRatio * 100), "58.2");
-  assert.equal(Math.round(report.engineeringSavingPotential), 74213);
+  assert.equal(Math.round(report.engineeringSavingPotential), 90817);
 
   assert.equal(report.totalPanels, 100);
   assert.equal(report.productionHours, 7520);
@@ -106,7 +109,19 @@ test("default report matches every workbook acceptance value (requirement #8)", 
   assert.equal(Math.round(report.productionSavingPotential), 63600);
 
   const total = report.engineeringSavingPotential + report.productionSavingPotential;
-  assert.equal(moneyWithCents(total, "$"), "$137,813.21");
+  assert.equal(moneyWithCents(total, "$"), "$154,417.37");
+
+  // Total hours / year savings = total saving potential / average hourly rate.
+  assert.equal(report.averageHourlyRate, 57.5);
+  assert.equal(Math.round(report.totalHoursPerYearSavings), 2686);
+});
+
+test("As-is level tracks the selected ECAD software: SolidWorks Electrical keeps the workbook-computed level, AutoCAD Electrical is pinned lower", () => {
+  const solidworks = calculate({ ...defaults, softwareChoice: "SolidWorks Electrical" });
+  assert.equal(number2(solidworks.engineeringCurrentLevel), "2.15");
+
+  const autocad = calculate({ ...defaults, softwareChoice: "AutoCAD Electrical" });
+  assert.equal(autocad.engineeringCurrentLevel, 1.76);
 });
 
 function number2(value) {
@@ -140,12 +155,15 @@ test("savings updates: report reflects input FTE/rate/time-share changes", () =>
 });
 
 test("changing a questionnaire answer updates the current level and total savings", () => {
-  const before = calculate(defaults);
+  // AutoCAD Electrical (the default) pins the engineering As-is level, so
+  // this exercises a software choice whose level is still workbook-computed.
+  const base = { ...defaults, softwareChoice: "SolidWorks Electrical" };
+  const before = calculate(base);
   const beforeTotal = before.engineeringSavingPotential + before.productionSavingPotential;
 
   const after = calculate({
-    ...defaults,
-    engineeringAnswers: { ...defaults.engineeringAnswers, q1a: 5, q1b: 5, q1c: 5 },
+    ...base,
+    engineeringAnswers: { ...base.engineeringAnswers, q1a: 5, q1b: 5, q1c: 5 },
   });
   const afterTotal = after.engineeringSavingPotential + after.productionSavingPotential;
 
@@ -175,7 +193,10 @@ test("recommendation status updates: between current and target is offered now",
 });
 
 test("recommendation statuses recompute as current/target levels change", () => {
-  const before = calculate(defaults);
+  // AutoCAD Electrical (the default) pins the engineering As-is level, so
+  // this exercises a software choice whose level is still workbook-computed.
+  const base = { ...defaults, softwareChoice: "SolidWorks Electrical" };
+  const before = calculate(base);
   const statusBefore = recommendationStatus(
     2.5,
     before.engineeringCurrentLevel,
@@ -184,9 +205,9 @@ test("recommendation statuses recompute as current/target levels change", () => 
   assert.equal(statusBefore, "To be offered/implemented");
 
   const after = calculate({
-    ...defaults,
+    ...base,
     engineeringAnswers: {
-      ...defaults.engineeringAnswers,
+      ...base.engineeringAnswers,
       q1a: 5, q1b: 5, q1c: 5, q2a: 5, q2b: 5, q2c: 5, q2d: 5,
     },
   });
@@ -197,7 +218,7 @@ test("recommendation statuses recompute as current/target levels change", () => 
   );
   assert.equal(statusAfter, "Should already be available/implemented");
 
-  const lowerTarget = calculate({ ...defaults, engineeringTargetLevel: 2 });
+  const lowerTarget = calculate({ ...base, engineeringTargetLevel: 2 });
   const statusLowerTarget = recommendationStatus(
     2.5,
     lowerTarget.engineeringCurrentLevel,

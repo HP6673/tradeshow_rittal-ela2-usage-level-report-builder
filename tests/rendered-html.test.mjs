@@ -37,7 +37,7 @@ test("server-renders the ELA2 quick ROI calculator with workbook defaults applie
   assert.match(html, />Export report</i);
   assert.match(html, /Improvements to engineering/i);
   assert.match(html, /Improvements to production/i);
-  assert.match(html, /rittal-logo\.png/);
+  assert.match(html, /eplan-logo\.svg/);
 
   // The 5 quick-entry fields must be present.
   assert.match(html, /Company name/i);
@@ -59,9 +59,10 @@ test("server-renders the ELA2 quick ROI calculator with workbook defaults applie
   assert.doesNotMatch(html, /General rating on ECAD usage/i);
 
   // Workbook defaults must be applied on load, not a static, misleading
-  // $0.00 total — this quick-entry version still needs an instant estimate.
-  assert.match(html, /\$137,813\.21/);
-  assert.doesNotMatch(html, /\$0\.00/);
+  // 0 h total — this quick-entry version still needs an instant estimate.
+  // The default software choice is AutoCAD Electrical, which pins the
+  // engineering As-is level to 1.76 (vs. ~2.15 for other choices).
+  assert.match(html, /2,686\s*h/);
 
   // The reset action must exist (renamed from "Clear assessment" — there's
   // no interactive assessment to clear anymore, just quick-entry fields).
@@ -90,7 +91,7 @@ test("export report: dedicated preview covers every required section and hides r
   assert.match(printReport, /onClick=\{\(\) => window\.print\(\)\}/);
 
   // Cover/header content.
-  assert.match(printReport, /rittal-logo\.png/);
+  assert.match(printReport, /eplan-logo\.svg/);
   assert.match(printReport, /ELA2 Usage Level Report/);
   assert.match(printReport, /input\.companyName/);
   assert.match(printReport, /input\.ecadTool/);
@@ -169,7 +170,7 @@ test("keeps deployment metadata and source aligned", async () => {
   assert.match(page, /export const metadata:\s*Metadata/);
   assert.match(page, /<Calculator \/>/);
   assert.match(layout, /title:\s*"ELA2 Usage Level Report Builder"/);
-  assert.match(calculator, /src="\/rittal-logo\.png"/);
+  assert.match(calculator, /src="\/eplan-logo\.svg"/);
   assert.match(packageJson, /"packageManager": "pnpm@11\.9\.0"/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   assert.match(wrangler, /"compatibility_flags": \["nodejs_compat"\]/);
