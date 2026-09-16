@@ -70,6 +70,7 @@ export function Calculator() {
       if (saved) {
         const parsed = JSON.parse(saved) as Partial<Inputs>;
 
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- deliberate post-hydration restore (see comment above); a lazy useState initializer would mismatch the SSR markup instead.
         setInput((current) => ({ ...current, ...parsed }));
       }
     } catch {

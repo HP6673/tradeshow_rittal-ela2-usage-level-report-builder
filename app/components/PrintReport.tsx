@@ -275,7 +275,7 @@ export function ExportReportModal({
           {/* Recommendations — requirement #7 */}
           <ReportSection title="Recommended offering">
             <p className="text-xs text-[#94a3b8]">
-              Items ready to offer now, based on this customer's current and target levels.
+              Items ready to offer now, based on this customer&apos;s current and target levels.
             </p>
             <RecommendationTable input={input} rows={toBeOffered} />
           </ReportSection>
@@ -286,7 +286,7 @@ export function ExportReportModal({
               titleClassName="text-[#64748b]"
             >
               <p className="text-xs text-[#94a3b8]">
-                Above the current target level — worth revisiting as this customer's roadmap advances.
+                Above the current target level — worth revisiting as this customer&apos;s roadmap advances.
               </p>
               <RecommendationTable input={input} rows={futureImprovements} muted />
             </ReportSection>
