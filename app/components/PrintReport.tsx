@@ -144,7 +144,7 @@ export function ExportReportModal({
               <img
                 alt="Eplan"
                 className="h-14 w-24 shrink-0 object-contain sm:h-16 sm:w-28"
-                src="/eplan-logo.svg"
+                src="/eplan-logo.png"
               />
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#94a3b8]">
