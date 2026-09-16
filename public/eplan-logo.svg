@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450" role="img" aria-label="Eplan">
+  <!-- Red block with three white diagonal bars -->
+  <rect x="0" y="0" width="300" height="205" fill="#E2001A" />
+  <clipPath id="eplan-red-clip">
+    <rect x="0" y="0" width="300" height="205" />
+  </clipPath>
+  <g clip-path="url(#eplan-red-clip)" fill="#FFFFFF">
+    <rect x="55" y="10" width="30" height="180" rx="15" transform="rotate(20 70 100)" />
+    <rect x="115" y="10" width="30" height="180" rx="15" transform="rotate(20 130 100)" />
+    <rect x="175" y="10" width="30" height="180" rx="15" transform="rotate(20 190 100)" />
+  </g>
+
+  <!-- White band with the "ePLAN" wordmark -->
+  <rect x="0" y="205" width="300" height="145" fill="#FFFFFF" />
+  <text
+    x="20"
+    y="300"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="105"
+    font-weight="800"
+    fill="#E2001A"
+  >e</text>
+  <text
+    x="78"
+    y="300"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="72"
+    font-weight="800"
+    letter-spacing="1"
+    fill="#111111"
+  >PLAN</text>
+  <path d="M20 322 L 262 322 L 280 340 L 20 340 Z" fill="#111111" />
+
+  <!-- Five-color stripe -->
+  <rect x="0" y="350" width="60" height="100" fill="#00954A" />
+  <rect x="60" y="350" width="60" height="100" fill="#00A0DC" />
+  <rect x="120" y="350" width="60" height="100" fill="#0066B3" />
+  <rect x="180" y="350" width="60" height="100" fill="#92278F" />
+  <rect x="240" y="350" width="60" height="100" fill="#E2001A" />
+</svg>

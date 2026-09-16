@@ -12,10 +12,11 @@ import {
 import {
   buildEngineeringMetricRows,
   buildProductionMetricRows,
+  hours,
   money,
   moneyWithCents,
   number,
-  type ChartData,
+  type CategoryChartData,
   type Inputs,
   type MetricRow,
   type Report,
@@ -36,8 +37,8 @@ export function ExportReportModal({
 }: {
   input: Inputs;
   report: Report;
-  engineeringChart: ChartData;
-  productionChart: ChartData;
+  engineeringChart: CategoryChartData;
+  productionChart: CategoryChartData;
   onClose: () => void;
 }) {
   useEffect(() => {
@@ -141,13 +142,13 @@ export function ExportReportModal({
           <header className="flex flex-wrap items-start justify-between gap-6 border-b-2 border-[#e50043] pb-6">
             <div className="flex items-center gap-4">
               <img
-                alt="Rittal"
+                alt="Eplan"
                 className="h-14 w-24 shrink-0 object-contain sm:h-16 sm:w-28"
-                src="/rittal-logo.png"
+                src="/eplan-logo.svg"
               />
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#94a3b8]">
-                  Rittal
+                  Eplan
                 </p>
                 <h1 className="text-2xl font-bold text-[#111827] sm:text-3xl">
                   ELA2 Usage Level Report
@@ -166,8 +167,8 @@ export function ExportReportModal({
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <CoverStat
               emphasize
-              label="Total saving potential"
-              value={moneyWithCents(totalSaving, input.currency)}
+              label="Total hours / year savings"
+              value={hours(report.totalHoursPerYearSavings)}
             />
             <CoverStat
               label="Engineering level"
@@ -274,7 +275,7 @@ export function ExportReportModal({
           {/* Recommendations — requirement #7 */}
           <ReportSection title="Recommended offering">
             <p className="text-xs text-[#94a3b8]">
-              Items ready to offer now, based on this customer's current and target levels.
+              Items ready to offer now, based on this customer&apos;s current and target levels.
             </p>
             <RecommendationTable input={input} rows={toBeOffered} />
           </ReportSection>
@@ -285,7 +286,7 @@ export function ExportReportModal({
               titleClassName="text-[#64748b]"
             >
               <p className="text-xs text-[#94a3b8]">
-                Above the current target level — worth revisiting as this customer's roadmap advances.
+                Above the current target level — worth revisiting as this customer&apos;s roadmap advances.
               </p>
               <RecommendationTable input={input} rows={futureImprovements} muted />
             </ReportSection>
@@ -377,33 +378,18 @@ function MetricsTable({ title, rows }: { title: string; rows: MetricRow[] }) {
 // Percentage-width bar comparison (no fixed pixel min-widths) so it always
 // fits the printable page — the full interactive chart's horizontal scroll
 // container would otherwise get clipped mid-page when printed.
-function PrintChartSummary({ title, chart }: { title: string; chart: ChartData }) {
-  const asIsIndex = chart.labels.indexOf("As-is");
-  const targetIndex = chart.labels.indexOf("Target");
+function PrintChartSummary({ title, chart }: { title: string; chart: CategoryChartData }) {
+  const asIsTotal = chart.categories.reduce((sum, category) => sum + category.asIs, 0);
+  const targetTotal = chart.categories.reduce((sum, category) => sum + category.target, 0);
   const bars = [
-    { label: "As-is", index: asIsIndex },
-    { label: "Target", index: targetIndex },
-  ].map(({ label, index }) => ({
-    label,
-    primary: chart.primary[index],
-    secondary: chart.secondary[index],
-    total: chart.total[index],
-  }));
+    { label: "As-is", total: asIsTotal, values: "asIs" as const },
+    { label: "Target", total: targetTotal, values: "target" as const },
+  ];
   const max = Math.max(...bars.map((bar) => bar.total), 0.01);
 
   return (
     <div className="min-w-0 print:break-inside-avoid">
       <h3 className="text-sm font-semibold text-[#111827]">{title}</h3>
-      <div className="mt-1.5 flex items-center gap-4 text-xs text-[#64748b]">
-        <span className="inline-flex items-center gap-1.5">
-          <span aria-hidden="true" className="h-2.5 w-2.5 rounded-sm bg-[#E50043]" />
-          {chart.primaryLabel}
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span aria-hidden="true" className="h-2.5 w-2.5 rounded-sm bg-[#94A3B8]" />
-          {chart.secondaryLabel}
-        </span>
-      </div>
       <div className="mt-3 grid gap-3">
         {bars.map((bar) => (
           <div className="grid grid-cols-[52px_1fr_48px] items-center gap-2" key={bar.label}>
@@ -413,18 +399,21 @@ function PrintChartSummary({ title, chart }: { title: string; chart: ChartData }
                 className="flex h-full"
                 style={{ width: `${(bar.total / max) * 100}%` }}
               >
-                <div
-                  style={{
-                    width: bar.total ? `${(bar.primary / bar.total) * 100}%` : "0%",
-                    backgroundColor: "#E50043",
-                  }}
-                />
-                <div
-                  style={{
-                    width: bar.total ? `${(bar.secondary / bar.total) * 100}%` : "0%",
-                    backgroundColor: "#94A3B8",
-                  }}
-                />
+                {chart.categories.map((category) => {
+                  const value = category[bar.values];
+                  const width = bar.total ? (value / bar.total) * 100 : 0;
+
+                  if (width <= 0) {
+                    return null;
+                  }
+
+                  return (
+                    <div
+                      key={category.number}
+                      style={{ width: `${width}%`, backgroundColor: category.color }}
+                    />
+                  );
+                })}
               </div>
             </div>
             <span className="text-right text-xs font-semibold text-[#111827]">
@@ -433,6 +422,20 @@ function PrintChartSummary({ title, chart }: { title: string; chart: ChartData }
           </div>
         ))}
       </div>
+      <ul className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] text-[#64748b]">
+        {chart.categories.map((category) => (
+          <li className="flex items-center gap-1.5" key={category.number}>
+            <span
+              aria-hidden="true"
+              className="h-2 w-2 shrink-0 rounded-full"
+              style={{ backgroundColor: category.color }}
+            />
+            <span className="truncate">
+              {category.number}. {category.label}
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

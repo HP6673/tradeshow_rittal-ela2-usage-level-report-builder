@@ -5,12 +5,12 @@ import {
   calculate,
   clampField,
   defaults,
-  engineeringChartData,
+  engineeringCategoryChartData,
   fieldConstraints,
-  moneyWithCents,
+  hours,
   normalizeNumericInput,
   percentFields,
-  productionChartData,
+  productionCategoryChartData,
   type Inputs,
   type NumericInputKey,
 } from "./lib/calculations.ts";
@@ -70,6 +70,7 @@ export function Calculator() {
       if (saved) {
         const parsed = JSON.parse(saved) as Partial<Inputs>;
 
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- deliberate post-hydration restore (see comment above); a lazy useState initializer would mismatch the SSR markup instead.
         setInput((current) => ({ ...current, ...parsed }));
       }
     } catch {
@@ -133,10 +134,8 @@ export function Calculator() {
   }, []);
 
   const report = useMemo(() => calculate(input), [input]);
-  const engineeringChart = useMemo(() => engineeringChartData(input), [input]);
-  const productionChart = useMemo(() => productionChartData(input), [input]);
-  const totalSaving =
-    report.engineeringSavingPotential + report.productionSavingPotential;
+  const engineeringChart = useMemo(() => engineeringCategoryChartData(input), [input]);
+  const productionChart = useMemo(() => productionCategoryChartData(input), [input]);
 
   function updateNumber(key: NumericInputKey, rawValue: string) {
     const parsed = normalizeNumericInput(rawValue);
@@ -217,9 +216,9 @@ export function Calculator() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="flex min-w-0 items-center gap-3 sm:gap-4">
               <img
-                alt="Rittal"
+                alt="Eplan"
                 className="h-14 w-24 shrink-0 object-contain sm:h-20 sm:w-32 lg:w-40"
-                src="/rittal-logo.png"
+                src="/eplan-logo.svg"
               />
               <div className="min-w-0">
                 <h1 className="text-2xl font-semibold tracking-normal text-[#111827] sm:text-3xl lg:text-4xl">
@@ -235,10 +234,10 @@ export function Calculator() {
             <div className="flex flex-wrap items-center gap-3">
               <div className="rounded-md border border-[#e0e4e8] bg-[#fafafa] px-4 py-3 shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#68707c]">
-                  Total saving potential
+                  Total hours / year savings
                 </p>
                 <p className="mt-1 text-2xl font-semibold text-[#111827] sm:text-3xl">
-                  {moneyWithCents(totalSaving, input.currency)}
+                  {hours(report.totalHoursPerYearSavings)}
                 </p>
               </div>
               <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
