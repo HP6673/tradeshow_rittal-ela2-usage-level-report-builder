@@ -213,15 +213,15 @@ export function Calculator() {
 
       <header className="border-b border-[#dfe3e8] bg-white shadow-[0_12px_30px_rgba(15,23,42,0.06)] print:hidden">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-8 sm:py-8">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:flex-nowrap lg:items-center lg:justify-between lg:gap-6">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4 lg:shrink">
               <img
                 alt="Eplan"
-                className="h-14 w-24 shrink-0 object-contain sm:h-20 sm:w-32 lg:w-40"
+                className="h-14 w-24 shrink-0 object-contain sm:h-20 sm:w-32"
                 src="/eplan-logo.svg"
               />
               <div className="min-w-0">
-                <h1 className="text-2xl font-semibold tracking-normal text-[#111827] sm:text-3xl lg:text-4xl">
+                <h1 className="truncate text-2xl font-semibold tracking-normal text-[#111827] sm:text-3xl">
                   ELA2 Usage Level Report Builder
                 </h1>
                 {input.companyName ? (
@@ -231,8 +231,8 @@ export function Calculator() {
                 ) : null}
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="rounded-md border border-[#e0e4e8] bg-[#fafafa] px-4 py-3 shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+            <div className="flex flex-wrap items-center gap-3 lg:shrink-0 lg:flex-nowrap">
+              <div className="whitespace-nowrap rounded-md border border-[#e0e4e8] bg-[#fafafa] px-4 py-3 shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#68707c]">
                   Total hours / year savings
                 </p>
