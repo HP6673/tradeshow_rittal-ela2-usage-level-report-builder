@@ -37,7 +37,7 @@ test("server-renders the ELA2 quick ROI calculator with workbook defaults applie
   assert.match(html, />Export report</i);
   assert.match(html, /Improvements to engineering/i);
   assert.match(html, /Improvements to production/i);
-  assert.match(html, /eplan-logo\.svg/);
+  assert.match(html, /eplan-logo\.png/);
 
   // The 5 quick-entry fields must be present.
   assert.match(html, /Company name/i);
@@ -91,7 +91,7 @@ test("export report: dedicated preview covers every required section and hides r
   assert.match(printReport, /onClick=\{\(\) => window\.print\(\)\}/);
 
   // Cover/header content.
-  assert.match(printReport, /eplan-logo\.svg/);
+  assert.match(printReport, /eplan-logo\.png/);
   assert.match(printReport, /ELA2 Usage Level Report/);
   assert.match(printReport, /input\.companyName/);
   assert.match(printReport, /input\.ecadTool/);
@@ -170,7 +170,7 @@ test("keeps deployment metadata and source aligned", async () => {
   assert.match(page, /export const metadata:\s*Metadata/);
   assert.match(page, /<Calculator \/>/);
   assert.match(layout, /title:\s*"ELA2 Usage Level Report Builder"/);
-  assert.match(calculator, /src="\/eplan-logo\.svg"/);
+  assert.match(calculator, /src="\/eplan-logo\.png"/);
   assert.match(packageJson, /"packageManager": "pnpm@11\.9\.0"/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   assert.match(wrangler, /"compatibility_flags": \["nodejs_compat"\]/);

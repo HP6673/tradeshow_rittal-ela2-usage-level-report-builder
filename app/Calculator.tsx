@@ -218,7 +218,7 @@ export function Calculator() {
               <img
                 alt="Eplan"
                 className="h-14 w-24 shrink-0 object-contain sm:h-20 sm:w-32"
-                src="/eplan-logo.svg"
+                src="/eplan-logo.png"
               />
               <div className="min-w-0">
                 <h1 className="truncate text-2xl font-semibold tracking-normal text-[#111827] sm:text-3xl">
