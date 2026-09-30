@@ -2,14 +2,6 @@
 
 import { useEffect, type ReactNode } from "react";
 import {
-  engineeringRecommendations,
-  formatQuantity,
-  productionRecommendations,
-  recommendationStatus,
-  type RecommendationItem,
-  type RecommendationStatus,
-} from "../data/offers.ts";
-import {
   buildEngineeringMetricRows,
   buildProductionMetricRows,
   hours,
@@ -22,7 +14,6 @@ import {
   type MetricRow,
   type Report,
 } from "../lib/calculations.ts";
-import { StatusBadge } from "./ui.tsx";
 
 // Requirement #1/#9 — a dedicated, report-only preview: opened from an
 // explicit "Export report" button, closed with "Back to editor", and
@@ -60,30 +51,6 @@ export function ExportReportModal({
   });
   const totalSaving =
     report.engineeringSavingPotential + report.productionSavingPotential;
-
-  const engineeringOffers = engineeringRecommendations.map((row) => ({
-    ...row,
-    status: recommendationStatus(
-      row.neededFromLevel,
-      report.engineeringCurrentLevel,
-      report.engineeringTargetLevel,
-    ),
-  }));
-  const productionOffers = productionRecommendations.map((row) => ({
-    ...row,
-    status: recommendationStatus(
-      row.neededFromLevel,
-      report.productionCurrentLevel,
-      report.productionTargetLevel,
-    ),
-  }));
-  const allOffers = [...engineeringOffers, ...productionOffers];
-  const toBeOffered = allOffers.filter(
-    (row) => row.status === "To be offered/implemented",
-  );
-  const futureImprovements = allOffers.filter(
-    (row) => row.status === "Possible future improvement",
-  );
 
   const mainGap =
     report.engineeringDifference >= report.productionDifference
@@ -165,7 +132,7 @@ export function ExportReportModal({
             </div>
           </header>
 
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
             <CoverStat
               emphasize
               label="Total hours / year savings"
@@ -178,10 +145,6 @@ export function ExportReportModal({
             <CoverStat
               label="Production level"
               value={`${number(report.productionCurrentLevel, 2)} → ${number(report.productionTargetLevel, 2)}`}
-            />
-            <CoverStat
-              label="Recommended now"
-              value={`${toBeOffered.length} item${toBeOffered.length === 1 ? "" : "s"}`}
             />
           </div>
 
@@ -203,10 +166,6 @@ export function ExportReportModal({
               <SummaryLine
                 label="Main maturity gap"
                 value={`${mainGap.label} (${number(mainGap.value * 100, 1)}% potential improvement)`}
-              />
-              <SummaryLine
-                label="Recommendations to be offered"
-                value={`${toBeOffered.length} of ${allOffers.length} total`}
               />
             </ul>
           </ReportSection>
@@ -272,26 +231,6 @@ export function ExportReportModal({
               <PrintChartSummary chart={productionChart} title="Production time [%]" />
             </div>
           </ReportSection>
-
-          {/* Recommendations — requirement #7 */}
-          <ReportSection title="Recommended offering">
-            <p className="text-xs text-[#94a3b8]">
-              Items ready to offer now, based on this customer&apos;s current and target levels.
-            </p>
-            <RecommendationTable input={input} rows={toBeOffered} />
-          </ReportSection>
-
-          {futureImprovements.length > 0 ? (
-            <ReportSection
-              title="Appendix: possible future improvements"
-              titleClassName="text-[#64748b]"
-            >
-              <p className="text-xs text-[#94a3b8]">
-                Above the current target level — worth revisiting as this customer&apos;s roadmap advances.
-              </p>
-              <RecommendationTable input={input} rows={futureImprovements} muted />
-            </ReportSection>
-          ) : null}
 
           <p className="mt-8 border-t border-[#edf0f3] pt-4 text-xs leading-relaxed text-[#64748b]">
             <strong className="font-semibold text-[#4d5662]">Disclaimer:</strong> {savingsDisclaimer}
@@ -442,83 +381,5 @@ function PrintChartSummary({ title, chart }: { title: string; chart: CategoryCha
         ))}
       </ul>
     </div>
-  );
-}
-
-function RecommendationTable({
-  rows,
-  input,
-  muted,
-}: {
-  rows: (RecommendationItem & { status: RecommendationStatus })[];
-  input: Inputs;
-  muted?: boolean;
-}) {
-  if (rows.length === 0) {
-    return (
-      <p className="mt-2 text-sm text-[#94a3b8]">No items in this category.</p>
-    );
-  }
-
-  return (
-    <>
-      {/* Desktop / print: table. */}
-      <div className="mt-2 hidden overflow-x-auto rounded border border-[#d6dce3] sm:block">
-        <table className="w-full border-collapse text-left text-sm">
-          <thead className="bg-[#f8fafc] text-xs uppercase tracking-[0.1em] text-[#52606d]">
-            <tr>
-              <th className="border-r border-[#d6dce3] px-3 py-2">Item</th>
-              <th className="border-r border-[#d6dce3] px-3 py-2">Type</th>
-              <th className="border-r border-[#d6dce3] px-3 py-2">Qty</th>
-              <th className="border-r border-[#d6dce3] px-3 py-2">Needed from</th>
-              <th className="px-3 py-2">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, index) => (
-              <tr
-                className={`border-b border-[#edf0f3] ${muted ? "text-[#94a3b8]" : ""}`}
-                key={`${row.item}-${index}`}
-              >
-                <td className="border-r border-[#edf0f3] px-3 py-2">{row.item}</td>
-                <td className="border-r border-[#edf0f3] px-3 py-2">{row.type}</td>
-                <td className="border-r border-[#edf0f3] px-3 py-2">
-                  {formatQuantity(row.quantity, input)}
-                </td>
-                <td className="border-r border-[#edf0f3] px-3 py-2">
-                  {number(row.neededFromLevel, 2)}
-                </td>
-                <td className="px-3 py-2">
-                  <StatusBadge status={row.status} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Mobile: stacked cards instead of a wide table. */}
-      <div className="mt-2 grid gap-2 sm:hidden">
-        {rows.map((row, index) => (
-          <div
-            className="min-w-0 rounded border border-[#d6dce3] bg-[#fbfcfe] p-3"
-            key={`${row.item}-${index}`}
-          >
-            <p className="text-sm font-semibold text-[#111827]">{row.item}</p>
-            <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-[#52606d]">
-              <dt className="text-[#94a3b8]">Type</dt>
-              <dd>{row.type}</dd>
-              <dt className="text-[#94a3b8]">Quantity</dt>
-              <dd>{formatQuantity(row.quantity, input)}</dd>
-              <dt className="text-[#94a3b8]">Needed from level</dt>
-              <dd>{number(row.neededFromLevel, 2)}</dd>
-            </dl>
-            <div className="mt-2">
-              <StatusBadge status={row.status} />
-            </div>
-          </div>
-        ))}
-      </div>
-    </>
   );
 }

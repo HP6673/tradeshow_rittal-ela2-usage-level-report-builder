@@ -35,7 +35,7 @@ test("server-renders the ELA2 quick ROI calculator with workbook defaults applie
   assert.match(html, /Results\s*(&|&amp;)\s*savings/i);
   assert.match(html, />Export report</i);
   // Tradeshow request: the Recommended offering section is hidden from the
-  // dashboard (the exported report still lists recommendations).
+  // dashboard (and from the exported report — see below).
   assert.doesNotMatch(html, /Recommended offering/i);
   assert.doesNotMatch(html, /Improvements to engineering/i);
   assert.doesNotMatch(html, /Improvements to production/i);
@@ -119,7 +119,6 @@ test("export report: dedicated preview covers every required section and hides r
   // Executive summary.
   assert.match(printReport, /Executive summary/);
   assert.match(printReport, /Main maturity gap/);
-  assert.match(printReport, /Recommendations to be offered/);
 
   // Key assumptions / input summary.
   assert.match(printReport, /Key assumptions/);
@@ -140,14 +139,13 @@ test("export report: dedicated preview covers every required section and hides r
   assert.match(printReport, /"As-is"/);
   assert.match(printReport, /"Target"/);
 
-  // Recommendations default to "to be offered" only, with "possible future
-  // improvement" as a separate appendix; "should already be available" is
-  // excluded from the client-facing report entirely.
-  assert.match(printReport, /Recommended offering/);
-  assert.match(printReport, /Appendix: possible future improvements/);
-  assert.match(printReport, /toBeOffered/);
-  assert.match(printReport, /futureImprovements/);
-  assert.doesNotMatch(printReport, /Should already be available/);
+  // Tradeshow request: recommendations are hidden from the exported report
+  // too — no offering tables, counts, or appendix.
+  assert.doesNotMatch(printReport, /Recommended offering/);
+  assert.doesNotMatch(printReport, /Recommendations to be offered/);
+  assert.doesNotMatch(printReport, /Recommended now/);
+  assert.doesNotMatch(printReport, /possible future improvements/i);
+  assert.doesNotMatch(printReport, /RecommendationTable|offers\.ts/);
   assert.match(printReport, /savingsDisclaimer/);
 
   // The export view must not render the interactive questionnaire (no radio

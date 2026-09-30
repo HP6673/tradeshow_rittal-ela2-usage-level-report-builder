@@ -323,7 +323,7 @@ export function Calculator() {
         />
 
         <SectionCard
-          description="Generate a polished, client-ready PDF of this assessment — cover page, executive summary, results, charts, and recommendations. This does not print the working dashboard."
+          description="Generate a polished, client-ready PDF of this assessment — cover page, executive summary, results, and charts. This does not print the working dashboard."
           id="step-3"
           step={3}
           title="Export report"
