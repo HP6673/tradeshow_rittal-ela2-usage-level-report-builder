@@ -124,6 +124,32 @@ test("As-is level tracks the selected ECAD software: SolidWorks Electrical keeps
   assert.equal(autocad.engineeringCurrentLevel, 1.76);
 });
 
+test("DTM (Hoffman) starts from a 2.12 As-is level", () => {
+  const dtm = calculate({ ...defaults, softwareChoice: "DTM (Hoffman)" });
+  assert.equal(dtm.engineeringCurrentLevel, 2.12);
+});
+
+test("Design/BOM answers move the As-is level for every software choice", () => {
+  for (const softwareChoice of ["AutoCAD Electrical", "SolidWorks Electrical", "DTM (Hoffman)"]) {
+    const base = { ...defaults, softwareChoice };
+    const before = calculate(base).engineeringCurrentLevel;
+
+    // 4. Design is a whole section of the 8-section average: +1 answer = +1/8.
+    const design = calculate({
+      ...base,
+      engineeringAnswers: { ...base.engineeringAnswers, q4a: base.engineeringAnswers.q4a + 1 },
+    }).engineeringCurrentLevel;
+    assert.ok(Math.abs(design - before - 1 / 8) < 1e-9);
+
+    // 6. BOM averages its two sub-questions: +1 on one answer = +1/16.
+    const bom = calculate({
+      ...base,
+      engineeringAnswers: { ...base.engineeringAnswers, q6b: base.engineeringAnswers.q6b + 1 },
+    }).engineeringCurrentLevel;
+    assert.ok(Math.abs(bom - before - 1 / 16) < 1e-9);
+  }
+});
+
 function number2(value) {
   return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }

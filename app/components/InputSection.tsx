@@ -1,20 +1,21 @@
 "use client";
 
 import { softwareOptions, type Inputs, type NumericInputKey } from "../lib/calculations.ts";
+import {
+  tradeshowQuestionSections,
+  type EngineeringAnswers,
+  type TradeshowQuestion,
+} from "../data/questionnaire.ts";
 import { Field, SectionCard } from "./ui.tsx";
 
 const quantityOptions = Array.from({ length: 10 }, (_, index) => index + 1);
 
 function SoftwareRadioGroup({
   value,
-  otherValue,
   onChange,
-  onOtherChange,
 }: {
   value: string;
-  otherValue: string;
   onChange: (value: string) => void;
-  onOtherChange: (value: string) => void;
 }) {
   return (
     <fieldset className="min-w-0">
@@ -47,16 +48,56 @@ function SoftwareRadioGroup({
           );
         })}
       </div>
-      {value === "Other" ? (
-        <div className="mt-2">
-          <Field
-            inputMode="text"
-            label="Please specify"
-            value={otherValue}
-            onChange={onOtherChange}
-          />
-        </div>
-      ) : null}
+    </fieldset>
+  );
+}
+
+function QuestionRadioGroup({
+  question,
+  value,
+  onChange,
+}: {
+  question: TradeshowQuestion;
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <fieldset className="min-w-0">
+      <legend className="text-sm text-[#4d5662]">{question.prompt}</legend>
+      <div className="mt-2 grid gap-1.5">
+        {question.options.map((option) => {
+          const selected = value === option.value;
+
+          return (
+            <label
+              className={`flex min-w-0 cursor-pointer items-center gap-2 rounded border px-3 py-2 text-sm transition focus-within:ring-2 focus-within:ring-[#e50043]/40 ${
+                selected
+                  ? "border-[#e50043] bg-[#fdeef0]"
+                  : "border-[#e2e8f0] bg-white hover:bg-[#f8fafc]"
+              }`}
+              key={option.value}
+            >
+              <input
+                checked={selected}
+                className="h-4 w-4 shrink-0 accent-[#e50043]"
+                name={`question-${question.key}`}
+                onChange={() => onChange(option.value)}
+                type="radio"
+                value={option.value}
+              />
+              <span
+                aria-hidden="true"
+                className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
+                  selected ? "bg-[#e50043] text-white" : "bg-[#eef1f4] text-[#4d5662]"
+                }`}
+              >
+                {option.value}
+              </span>
+              <span className="min-w-0 text-[#33404c]">{option.label}</span>
+            </label>
+          );
+        })}
+      </div>
     </fieldset>
   );
 }
@@ -93,7 +134,7 @@ export function InputSection({
   onNumberChange,
   onTextChange,
   onSoftwareChange,
-  onSoftwareOtherChange,
+  onEngineeringAnswerChange,
   displayValue,
   fieldError,
 }: {
@@ -101,7 +142,7 @@ export function InputSection({
   onNumberChange: (key: NumericInputKey, value: string) => void;
   onTextChange: (key: keyof Inputs, value: string) => void;
   onSoftwareChange: (value: string) => void;
-  onSoftwareOtherChange: (value: string) => void;
+  onEngineeringAnswerChange: (key: keyof EngineeringAnswers, value: number) => void;
   displayValue: (key: NumericInputKey) => string;
   fieldError: (key: NumericInputKey) => string | undefined;
 }) {
@@ -144,13 +185,24 @@ export function InputSection({
       </div>
 
       <div className="mt-4">
-        <SoftwareRadioGroup
-          onChange={onSoftwareChange}
-          onOtherChange={onSoftwareOtherChange}
-          otherValue={input.softwareOther}
-          value={input.softwareChoice}
-        />
+        <SoftwareRadioGroup onChange={onSoftwareChange} value={input.softwareChoice} />
       </div>
+
+      {tradeshowQuestionSections.map((section) => (
+        <div className="mt-6 border-t border-[#edf0f3] pt-4" key={section.title}>
+          <h3 className="text-sm font-semibold text-[#111827]">{section.title}</h3>
+          <div className="mt-2 grid gap-4">
+            {section.questions.map((question) => (
+              <QuestionRadioGroup
+                key={question.key}
+                onChange={(value) => onEngineeringAnswerChange(question.key, value)}
+                question={question}
+                value={input.engineeringAnswers[question.key]}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
     </SectionCard>
   );
 }

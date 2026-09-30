@@ -33,10 +33,12 @@ test("server-renders the ELA2 quick ROI calculator with workbook defaults applie
   assert.match(html, /ELA2 Usage Level Report Builder/i);
   assert.match(html, /Quick inputs/i);
   assert.match(html, /Results\s*(&|&amp;)\s*savings/i);
-  assert.match(html, /Recommended offering/i);
   assert.match(html, />Export report</i);
-  assert.match(html, /Improvements to engineering/i);
-  assert.match(html, /Improvements to production/i);
+  // Tradeshow request: the Recommended offering section is hidden from the
+  // dashboard (the exported report still lists recommendations).
+  assert.doesNotMatch(html, /Recommended offering/i);
+  assert.doesNotMatch(html, /Improvements to engineering/i);
+  assert.doesNotMatch(html, /Improvements to production/i);
   assert.match(html, /eplan-logo\.png/);
 
   // The 5 quick-entry fields must be present.
@@ -45,10 +47,24 @@ test("server-renders the ELA2 quick ROI calculator with workbook defaults applie
   assert.match(html, />AutoCAD Electrical</);
   assert.match(html, />SolidWorks Electrical</);
   assert.match(html, />Microstation \(for E(&|&amp;)P\)</);
-  assert.match(html, />Other</);
+  assert.match(html, />DTM \(Hoffman\)</);
+  assert.doesNotMatch(html, />Other</);
+  assert.doesNotMatch(html, /Please specify/);
   assert.match(html, /Quantity of engineers/i);
   assert.match(html, /Quantity of panel builders/i);
   assert.match(html, /Quantity of panels per year/i);
+
+  // Tradeshow request: only the Design and BOM questions are asked, since
+  // they move the As-is level.
+  assert.match(html, /4\. Design/);
+  assert.match(html, /How does the electrical designer typically get started\?/);
+  assert.match(html, /6\. BOM/);
+  assert.match(html, /How complete is the information coming directly from the electrical design\?/);
+  assert.match(html, /what normally happens before purchasing \/ ERP can use it\?/);
+
+  // Disclaimer at the bottom of the interface.
+  assert.match(html, /Disclaimer:/);
+  assert.match(html, /Actual results may vary and are not guaranteed\./);
 
   // The old multi-step wizard's detailed questionnaires must be gone — the
   // quick-entry version uses workbook defaults for these instead of asking.
@@ -132,6 +148,7 @@ test("export report: dedicated preview covers every required section and hides r
   assert.match(printReport, /toBeOffered/);
   assert.match(printReport, /futureImprovements/);
   assert.doesNotMatch(printReport, /Should already be available/);
+  assert.match(printReport, /savingsDisclaimer/);
 
   // The export view must not render the interactive questionnaire (no radio
   // inputs / score selectors).

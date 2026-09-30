@@ -11,12 +11,14 @@ import {
   normalizeNumericInput,
   percentFields,
   productionCategoryChartData,
+  savingsDisclaimer,
+  softwareOptions,
   type Inputs,
   type NumericInputKey,
 } from "./lib/calculations.ts";
+import type { EngineeringAnswers } from "./data/questionnaire.ts";
 import { InputSection } from "./components/InputSection.tsx";
 import { ReportSummarySection } from "./components/ReportSummary.tsx";
-import { RecommendationsSection } from "./components/Recommendations.tsx";
 import { ExportReportModal } from "./components/PrintReport.tsx";
 import { SectionCard } from "./components/ui.tsx";
 
@@ -25,8 +27,7 @@ const STORAGE_KEY = "rittal-ela2-quick-report-builder:v1";
 const steps = [
   { id: "step-1", label: "Inputs" },
   { id: "step-2", label: "Results" },
-  { id: "step-3", label: "Offering" },
-  { id: "step-4", label: "Export" },
+  { id: "step-3", label: "Export" },
 ];
 
 function describeConstraint(key: NumericInputKey) {
@@ -69,6 +70,16 @@ export function Calculator() {
 
       if (saved) {
         const parsed = JSON.parse(saved) as Partial<Inputs>;
+
+        // Entries saved before "Other" became "DTM (Hoffman)" fall back to
+        // the default software choice instead of selecting nothing.
+        if (
+          parsed.softwareChoice !== undefined &&
+          !(softwareOptions as readonly string[]).includes(parsed.softwareChoice)
+        ) {
+          delete parsed.softwareChoice;
+          delete parsed.ecadTool;
+        }
 
         // eslint-disable-next-line react-hooks/set-state-in-effect -- deliberate post-hydration restore (see comment above); a lazy useState initializer would mismatch the SSR markup instead.
         setInput((current) => ({ ...current, ...parsed }));
@@ -182,18 +193,13 @@ export function Calculator() {
   }
 
   function updateSoftwareChoice(value: string) {
-    setInput((current) => ({
-      ...current,
-      softwareChoice: value,
-      ecadTool: value === "Other" ? current.softwareOther : value,
-    }));
+    setInput((current) => ({ ...current, softwareChoice: value, ecadTool: value }));
   }
 
-  function updateSoftwareOther(value: string) {
+  function updateEngineeringAnswer(key: keyof EngineeringAnswers, value: number) {
     setInput((current) => ({
       ...current,
-      softwareOther: value,
-      ecadTool: current.softwareChoice === "Other" ? value : current.ecadTool,
+      engineeringAnswers: { ...current.engineeringAnswers, [key]: value },
     }));
   }
 
@@ -303,9 +309,9 @@ export function Calculator() {
           displayValue={displayValue}
           fieldError={fieldError}
           input={input}
+          onEngineeringAnswerChange={updateEngineeringAnswer}
           onNumberChange={updateNumber}
           onSoftwareChange={updateSoftwareChoice}
-          onSoftwareOtherChange={updateSoftwareOther}
           onTextChange={updateText}
         />
 
@@ -316,18 +322,10 @@ export function Calculator() {
           report={report}
         />
 
-        <RecommendationsSection
-          engineeringCurrentLevel={report.engineeringCurrentLevel}
-          engineeringTargetLevel={report.engineeringTargetLevel}
-          input={input}
-          productionCurrentLevel={report.productionCurrentLevel}
-          productionTargetLevel={report.productionTargetLevel}
-        />
-
         <SectionCard
           description="Generate a polished, client-ready PDF of this assessment — cover page, executive summary, results, charts, and recommendations. This does not print the working dashboard."
-          id="step-4"
-          step={4}
+          id="step-3"
+          step={3}
           title="Export report"
         >
           <button
@@ -338,6 +336,10 @@ export function Calculator() {
             Export report
           </button>
         </SectionCard>
+
+        <p className="text-xs leading-relaxed text-[#64748b]">
+          <strong className="font-semibold text-[#4d5662]">Disclaimer:</strong> {savingsDisclaimer}
+        </p>
       </div>
 
       {showExportPreview ? (

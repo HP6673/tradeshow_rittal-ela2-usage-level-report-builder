@@ -16,6 +16,7 @@ import {
   money,
   moneyWithCents,
   number,
+  savingsDisclaimer,
   type CategoryChartData,
   type Inputs,
   type MetricRow,
@@ -291,6 +292,10 @@ export function ExportReportModal({
               <RecommendationTable input={input} rows={futureImprovements} muted />
             </ReportSection>
           ) : null}
+
+          <p className="mt-8 border-t border-[#edf0f3] pt-4 text-xs leading-relaxed text-[#64748b]">
+            <strong className="font-semibold text-[#4d5662]">Disclaimer:</strong> {savingsDisclaimer}
+          </p>
         </article>
       </div>
     </div>

@@ -17,7 +17,7 @@ export const softwareOptions = [
   "AutoCAD Electrical",
   "SolidWorks Electrical",
   "Microstation (for E&P)",
-  "Other",
+  "DTM (Hoffman)",
 ] as const;
 
 export type Inputs = {
@@ -36,11 +36,9 @@ export type Inputs = {
   erpTool: string;
 
   // Quick-entry software question. `softwareChoice` is one of
-  // `softwareOptions`; `softwareOther` holds the free-text value when
-  // "Other" is selected. `ecadTool` (above) always mirrors the effective
-  // choice so the report/print output needs no extra wiring.
+  // `softwareOptions`; `ecadTool` (above) always mirrors it so the
+  // report/print output needs no extra wiring.
   softwareChoice: string;
-  softwareOther: string;
 
   // Business/FTE inputs.
   projectsPerYear: number;
@@ -83,7 +81,6 @@ export const defaults: Inputs = {
   erpTool: "",
 
   softwareChoice: softwareOptions[0],
-  softwareOther: "",
 
   projectsPerYear: 50,
   pagesPerProject: 100,
@@ -168,16 +165,28 @@ export type ChartData = {
 };
 
 // Tradeshow request: the As-is efficiency level tracks which ECAD software
-// the customer selects — SolidWorks Electrical (and the other options) keep
-// the workbook-computed value (~2.15 for the shipped default answers), while
-// AutoCAD Electrical shows a lower, distinct value so the two competitive
-// products read as visibly different.
+// the customer selects. SolidWorks Electrical and Microstation keep the
+// workbook-computed value (~2.15 for the shipped default answers); AutoCAD
+// Electrical and DTM (Hoffman) start from a fixed baseline instead.
+const softwareBaselineLevels: Partial<Record<string, number>> = {
+  "AutoCAD Electrical": 1.76,
+  "DTM (Hoffman)": 2.12,
+};
+
+const defaultEngineeringLevel = computeEngineeringCurrentLevel(defaultEngineeringAnswers);
+
+// The booth questions (Design/BOM) still move a fixed baseline: it shifts by
+// however far the answers move the workbook level away from its defaults, so
+// the baseline shows unchanged until an answer is changed.
 export function engineeringAsIsLevel(input: Inputs) {
-  if (input.softwareChoice === "AutoCAD Electrical") {
-    return 1.76;
+  const computed = computeEngineeringCurrentLevel(input.engineeringAnswers);
+  const baseline = softwareBaselineLevels[input.softwareChoice];
+
+  if (baseline === undefined) {
+    return computed;
   }
 
-  return computeEngineeringCurrentLevel(input.engineeringAnswers);
+  return baseline + (computed - defaultEngineeringLevel);
 }
 
 // Colors for the per-workflow-item chart segments (requirement: replace the
@@ -511,6 +520,10 @@ export function calculate(input: Inputs) {
 }
 
 export type Report = ReturnType<typeof calculate>;
+
+// Shown under the dashboard and at the end of the exported report.
+export const savingsDisclaimer =
+  "The cost savings and ROI figures presented are estimates only and are based on assumptions and information provided. Actual results may vary and are not guaranteed.";
 
 export function money(value: number, currency: string) {
   return `${currency}${Math.round(value).toLocaleString()}`;
